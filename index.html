@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>La Corona del Reino Maldito</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+overflow:hidden;
+background:#000;
+color:white;
+}
+
+#gameContainer{
+width:100vw;
+height:100vh;
+position:relative;
+overflow:hidden;
+}
+
+#world{
+width:3000px;
+height:2000px;
+position:absolute;
+left:0;
+top:0;
+}
+
+#player{
+width:60px;
+height:60px;
+position:absolute;
+background:white;
+border:3px solid silver;
+border-radius:10px;
+z-index:10;
+}
+
+#player::after{
+content:"⚔";
+font-size:28px;
+position:absolute;
+left:14px;
+top:10px;
+}
+
+.enemy{
+width:70px;
+height:70px;
+position:absolute;
+border-radius:10px;
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:35px;
+}
+
+#hud{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:70px;
+background:rgba(0,0,0,.75);
+display:flex;
+align-items:center;
+justify-content:space-around;
+z-index:999;
+font-size:20px;
+}
+
+#messageBox{
+position:absolute;
+bottom:20px;
+left:50%;
+transform:translateX(-50%);
+width:80%;
+min-height:80px;
+background:rgba(0,0,0,.8);
+border:2px solid gold;
+padding:15px;
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:20px;
+z-index:999;
+}
+
+#battleScreen{
+position:absolute;
+left:0;
+top:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.95);
+display:none;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+z-index:5000;
+padding:30px;
+}
+
+#question{
+font-size:28px;
+margin-bottom:20px;
+text-align:center;
+max-width:900px;
+}
+
+.answer{
+width:600px;
+max-width:90%;
+padding:15px;
+margin:10px;
+font-size:20px;
+cursor:pointer;
+border:none;
+border-radius:10px;
+background:#444;
+color:white;
+}
+
+.answer:hover{
+background:gold;
+color:black;
+}
+
+#startScreen{
+position:absolute;
+left:0;
+top:0;
+width:100%;
+height:100%;
+background:linear-gradient(#111,#222,#000);
+display:flex;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+z-index:10000;
+}
+
+#startScreen h1{
+font-size:60px;
+text-align:center;
+color:gold;
+margin-bottom:20px;
+}
+
+.menuBtn{
+padding:15px 40px;
+margin:10px;
+font-size:22px;
+cursor:pointer;
+border:none;
+border-radius:10px;
+background:gold;
+}
+
+#finalScreen{
+position:absolute;
+left:0;
+top:0;
+width:100%;
+height:100%;
+background:black;
+display:none;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+z-index:15000;
+text-align:center;
+padding:30px;
+}
+
+#finalScreen h1{
+font-size:50px;
+color:gold;
+margin-bottom:20px;
+}
+
+.touch{
+position:absolute;
+width:80px;
+height:80px;
+background:rgba(255,255,255,.15);
+border:2px solid white;
+border-radius:50%;
+display:none;
+justify-content:center;
+align-items:center;
+font-size:30px;
+z-index:3000;
+}
+
+#up{left:100px;bottom:170px;}
+#left{left:20px;bottom:90px;}
+#right{left:180px;bottom:90px;}
+#down{left:100px;bottom:10px;}
+
+.levelTitle{
+position:absolute;
+left:50%;
+top:100px;
+transform:translateX(-50%);
+font-size:40px;
+background:rgba(0,0,0,.7);
+padding:15px 30px;
+border-radius:10px;
+display:none;
+z-index:900;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="gameContainer">
+
+<div id="startScreen">
+<h1>LA CORONA DEL REINO MALDITO</h1>
+
+<p style="margin-bottom:20px">
+Sir Aurelius debe rescatar a la princesa Elena
+</p>
+
+<button class="menuBtn" onclick="startGame()">
+Nueva Partida
+</button>
+
+<button class="menuBtn" onclick="loadGame()">
+Continuar
+</button>
+
+</div>
+
+<div id="hud">
+
+<div>
+❤️ Vidas:
+<span id="lives">4</span>
+</div>
+
+<div>
+👑 Fragmentos:
+<span id="fragments">0</span>/4
+</div>
+
+<div>
+📍 Nivel:
+<span id="levelName">Bosque Encantado</span>
+</div>
+
+</div>
+
+<div class="levelTitle" id="levelTitle"></div>
+
+<div id="world">
+
+<div id="player"></div>
+
+</div>
+
+<div id="messageBox">
+Encuentra y derrota a los enemigos de Morgana.
+</div>
+
+<div id="battleScreen">
+
+<div id="question"></div>
+
+<button class="answer" id="a1"></button>
+<button class="answer" id="a2"></button>
+<button class="answer" id="a3"></button>
+
+</div>
+
+<div id="finalScreen">
+
+<h1>
+Has restaurado la Corona Real
+</h1>
+
+<h2>
+La paz ha regresado al Reino de Eldoria
+</h2>
+
+<br>
+
+<p>
+La princesa Elena ha sido liberada.
+</p>
+
+<br>
+
+<p>
+FIN
+</p>
+
+</div>
+
+<div class="touch" id="up">▲</div>
+<div class="touch" id="left">◀</div>
+<div class="touch" id="right">▶</div>
+<div class="touch" id="down">▼</div>
+
+</div>
+
+<script>
+
+const player=document.getElementById("player");
+const world=document.getElementById("world");
+
+let playerX=200;
+let playerY=200;
+
+let lives=4;
+let fragments=0;
+
+let currentLevel=0;
+
+let battleEnemy=null;
+
+const levels=[
+{
+name:"Bosque Encantado",
+color:"#2e7d32"
+},
+{
+name:"Puente de Piedra",
+color:"#757575"
+},
+{
+name:"Fortaleza Abandonada",
+color:"#5d4037"
+},
+{
+name:"Montañas Heladas",
+color:"#cfd8dc"
+},
+{
+name:"Pantano Maldito",
+color:"#33691e"
+},
+{
+name:"Bosque Negro",
+color:"#111111"
+},
+{
+name:"Castillo Maldito",
+color:"#4a148c"
+}
+];const enemiesData = [
+
+{
+name:"Goblin de la Cueva",
+emoji:"👹",
+level:0,
+fragment:true,
+questions:[
+{
+q:"¿Cuáles son los bioelementos energéticos?",
+a:"Carbohidratos y lípidos",
+b:"Calcio y hierro",
+c:"Agua y vitaminas",
+correct:"a"
+},
+{
+q:"¿Cuáles son los bioelementos estructurales?",
+a:"Vitaminas y agua",
+b:"Proteínas y minerales",
+c:"Grasas y azúcares",
+correct:"b"
+}
+]
+},
+
+{
+name:"Troll del Puente",
+emoji:"🧌",
+level:1,
+fragment:true,
+questions:[
+{
+q:"¿Cuáles son los bioelementos reguladores?",
+a:"Vitaminas y minerales",
+b:"Grasas y proteínas",
+c:"Carbohidratos y lípidos",
+correct:"a"
+},
+{
+q:"¿Para qué sirven los bioelementos?",
+a:"Dar color",
+b:"Formar y regular funciones",
+c:"Solo producir energía",
+correct:"b"
+}
+]
+},
+
+{
+name:"Caballero Oscuro",
+emoji:"⚔️",
+level:2,
+fragment:true,
+questions:[
+{
+q:"¿Cuál es la fórmula química de los carbohidratos?",
+a:"Cn(H₂O)n",
+b:"NaCl",
+c:"CO₂",
+correct:"a"
+},
+{
+q:"¿Las proteínas están formadas principalmente por?",
+a:"Carbono, hidrógeno, oxígeno y nitrógeno",
+b:"Hierro y calcio",
+c:"Sodio y cloro",
+correct:"a"
+}
+]
+},
+
+{
+name:"Dragón Menor",
+emoji:"🐉",
+level:3,
+fragment:true,
+questions:[
+{
+q:"¿Cuántos tipos principales de grasas existen?",
+a:"1",
+b:"2",
+c:"5",
+correct:"b"
+},
+{
+q:"¿Qué influye más en nuestro peso?",
+a:"Alimentación y actividad física",
+b:"Color de ojos",
+c:"Estatura",
+correct:"a"
+}
+]
+},
+
+{
+name:"Hechicero Sombrío",
+emoji:"🧙",
+level:4,
+fragment:false,
+questions:[
+{
+q:"¿Cuál es la fórmula química de la glucosa?",
+a:"C6H12O6",
+b:"H2O",
+c:"CO2",
+correct:"a"
+},
+{
+q:"¿Qué elemento pierde más la mujer durante la menstruación?",
+a:"Calcio",
+b:"Hierro",
+c:"Sodio",
+correct:"b"
+}
+]
+},
+
+{
+name:"Guardián del Bosque Maldito",
+emoji:"🌲",
+level:5,
+fragment:false,
+questions:[
+{
+q:"¿Qué fruta contiene hierro y vitamina A?",
+a:"Mango",
+b:"Uva",
+c:"Pera",
+correct:"a"
+},
+{
+q:"¿Cuáles son los dos tipos de grasas insaturadas?",
+a:"Monoinsaturadas y poliinsaturadas",
+b:"Líquidas y sólidas",
+c:"Simples y dobles",
+correct:"a"
+}
+]
+},
+
+{
+name:"Morgana La Oscura",
+emoji:"🧙‍♀️",
+level:6,
+boss:true,
+questions:[
+{
+q:"¿Cuál es la fórmula general del IMC?",
+a:"Peso ÷ Altura²",
+b:"Altura ÷ Peso",
+c:"Peso × Altura",
+correct:"a"
+},
+{
+q:"¿Qué es el metabolismo?",
+a:"Transformación de alimentos en energía",
+b:"Cantidad de agua corporal",
+c:"Movimiento muscular",
+correct:"a"
+},
+{
+q:"¿Qué es el catabolismo?",
+a:"Descomposición de moléculas para obtener energía",
+b:"Formación de tejidos",
+c:"Eliminación de vitaminas",
+correct:"a"
+}
+]
+}
+
+];
+
+let enemies=[];
+
+function createEnemy(data,x,y){
+
+const enemy=document.createElement("div");
+
+enemy.classList.add("enemy");
+
+enemy.innerHTML=data.emoji;
+
+enemy.style.left=x+"px";
+enemy.style.top=y+"px";
+
+enemy.style.background="darkred";
+
+world.appendChild(enemy);
+
+enemies.push({
+element:enemy,
+data:data,
+x:x,
+y:y,
+defeated:false
+});
+
+}
+
+function buildWorld(){
+
+world.innerHTML="";
+
+world.appendChild(player);
+
+enemies=[];
+
+world.style.background=levels[currentLevel].color;
+
+switch(currentLevel){
+
+case 0:
+
+for(let i=0;i<80;i++){
+
+const tree=document.createElement("div");
+
+tree.style.position="absolute";
+tree.style.left=(Math.random()*2800)+"px";
+tree.style.top=(Math.random()*1800)+"px";
+tree.style.fontSize="50px";
+tree.innerHTML="🌳";
+
+world.appendChild(tree);
+
+}
+
+createEnemy(enemiesData[0],1500,900);
+
+break;
+
+case 1:
+
+for(let i=0;i<30;i++){
+
+const rock=document.createElement("div");
+
+rock.style.position="absolute";
+rock.style.left=(Math.random()*2800)+"px";
+rock.style.top=(Math.random()*1800)+"px";
+rock.style.fontSize="45px";
+rock.innerHTML="🪨";
+
+world.appendChild(rock);
+
+}
+
+createEnemy(enemiesData[1],1800,1000);
+
+break;
+
+case 2:
+
+for(let i=0;i<40;i++){
+
+const ruin=document.createElement("div");
+
+ruin.style.position="absolute";
+ruin.style.left=(Math.random()*2800)+"px";
+ruin.style.top=(Math.random()*1800)+"px";
+ruin.style.fontSize="50px";
+ruin.innerHTML="🏰";
+
+world.appendChild(ruin);
+
+}
+
+createEnemy(enemiesData[2],1700,1000);
+
+break;
+
+case 3:
+
+for(let i=0;i<100;i++){
+
+const snow=document.createElement("div");
+
+snow.style.position="absolute";
+snow.style.left=(Math.random()*2900)+"px";
+snow.style.top=(Math.random()*1900)+"px";
+snow.style.fontSize="25px";
+snow.innerHTML="❄️";
+
+world.appendChild(snow);
+
+}
+
+createEnemy(enemiesData[3],1600,900);
+
+break;
+
+case 4:
+
+for(let i=0;i<60;i++){
+
+const swamp=document.createElement("div");
+
+swamp.style.position="absolute";
+swamp.style.left=(Math.random()*2800)+"px";
+swamp.style.top=(Math.random()*1800)+"px";
+swamp.style.fontSize="40px";
+swamp.innerHTML="🪴";
+
+world.appendChild(swamp);
+
+}
+
+createEnemy(enemiesData[4],1700,1100);
+
+break;
+
+case 5:
+
+for(let i=0;i<90;i++){
+
+const darkTree=document.createElement("div");
+
+darkTree.style.position="absolute";
+darkTree.style.left=(Math.random()*2800)+"px";
+darkTree.style.top=(Math.random()*1800)+"px";
+darkTree.style.fontSize="50px";
+darkTree.innerHTML="🌲";
+
+world.appendChild(darkTree);
+
+}
+
+createEnemy(enemiesData[5],1800,1200);
+
+break;
+
+case 6:
+
+for(let i=0;i<20;i++){
+
+const tower=document.createElement("div");
+
+tower.style.position="absolute";
+tower.style.left=(Math.random()*2800)+"px";
+tower.style.top=(Math.random()*1800)+"px";
+tower.style.fontSize="80px";
+tower.innerHTML="🏯";
+
+world.appendChild(tower);
+
+}
+
+createEnemy(enemiesData[6],2000,1000);
+
+break;
+
+}
+
+updateHUD();
+showLevelTitle();
+}
+
+function showLevelTitle(){
+
+const title=document.getElementById("levelTitle");
+
+title.innerText=levels[currentLevel].name;
+
+title.style.display="block";
+
+setTimeout(()=>{
+title.style.display="none";
+},2500);
+
+}/* =========================================
+   MOVIMIENTO DEL CABALLERO
+   CÁMARA
+   HUD
+   CONTROLES TÁCTILES
+   COLISIONES
+========================================= */
+
+const keys = {};
+
+document.addEventListener("keydown",(e)=>{
+keys[e.key.toLowerCase()] = true;
+});
+
+document.addEventListener("keyup",(e)=>{
+keys[e.key.toLowerCase()] = false;
+});
+
+const SPEED = 5;
+
+function updatePlayer(){
+
+if(keys["arrowup"] || keys["w"]){
+playerY -= SPEED;
+}
+
+if(keys["arrowdown"] || keys["s"]){
+playerY += SPEED;
+}
+
+if(keys["arrowleft"] || keys["a"]){
+playerX -= SPEED;
+}
+
+if(keys["arrowright"] || keys["d"]){
+playerX += SPEED;
+}
+
+if(playerX < 0) playerX = 0;
+if(playerY < 0) playerY = 0;
+
+if(playerX > 2940) playerX = 2940;
+if(playerY > 1940) playerY = 1940;
+
+player.style.left = playerX + "px";
+player.style.top = playerY + "px";
+}
+
+function updateCamera(){
+
+const camX =
+playerX - window.innerWidth/2;
+
+const camY =
+playerY - window.innerHeight/2;
+
+world.style.transform =
+`translate(${-camX}px, ${-camY}px)`;
+
+}
+
+function updateHUD(){
+
+document.getElementById("lives").innerText =
+lives;
+
+document.getElementById("fragments").innerText =
+fragments;
+
+document.getElementById("levelName").innerText =
+levels[currentLevel].name;
+
+}
+
+/* =========================================
+   GUARDADO
+========================================= */
+
+function saveGame(){
+
+const data = {
+
+lives:lives,
+fragments:fragments,
+currentLevel:currentLevel,
+playerX:playerX,
+playerY:playerY
+
+};
+
+localStorage.setItem(
+"coronaMalditaSave",
+JSON.stringify(data)
+);
+
+}
+
+function loadGame(){
+
+const save =
+localStorage.getItem("coronaMalditaSave");
+
+if(!save){
+
+startGame();
+return;
+
+}
+
+const data = JSON.parse(save);
+
+lives = data.lives;
+fragments = data.fragments;
+currentLevel = data.currentLevel;
+playerX = data.playerX;
+playerY = data.playerY;
+
+document.getElementById(
+"startScreen"
+).style.display="none";
+
+buildWorld();
+
+updateHUD();
+
+}
+
+/* =========================================
+   INICIO DEL JUEGO
+========================================= */
+
+function startGame(){
+
+document.getElementById(
+"startScreen"
+).style.display="none";
+
+lives = 4;
+fragments = 0;
+currentLevel = 0;
+
+playerX = 200;
+playerY = 200;
+
+buildWorld();
+
+updateHUD();
+
+saveGame();
+
+}
+
+/* =========================================
+   CONTROLES TÁCTILES
+========================================= */
+
+const isTouch =
+'ontouchstart' in window;
+
+if(isTouch){
+
+document
+.getElementById("up")
+.style.display="flex";
+
+document
+.getElementById("down")
+.style.display="flex";
+
+document
+.getElementById("left")
+.style.display="flex";
+
+document
+.getElementById("right")
+.style.display="flex";
+
+}
+
+let touchUp=false;
+let touchDown=false;
+let touchLeft=false;
+let touchRight=false;
+
+function bindTouch(id,callbackDown,callbackUp){
+
+const el=document.getElementById(id);
+
+el.addEventListener(
+"touchstart",
+(e)=>{
+e.preventDefault();
+callbackDown();
+}
+);
+
+el.addEventListener(
+"touchend",
+(e)=>{
+e.preventDefault();
+callbackUp();
+}
+);
+
+}
+
+bindTouch(
+"up",
+()=>touchUp=true,
+()=>touchUp=false
+);
+
+bindTouch(
+"down",
+()=>touchDown=true,
+()=>touchDown=false
+);
+
+bindTouch(
+"left",
+()=>touchLeft=true,
+()=>touchLeft=false
+);
+
+bindTouch(
+"right",
+()=>touchRight=true,
+()=>touchRight=false
+);
+
+function updateTouchMovement(){
+
+if(touchUp){
+playerY -= SPEED;
+}
+
+if(touchDown){
+playerY += SPEED;
+}
+
+if(touchLeft){
+playerX -= SPEED;
+}
+
+if(touchRight){
+playerX += SPEED;
+}
+
+}
+
+/* =========================================
+   COLISIONES
+========================================= */
+
+function rectsCollide(r1,r2){
+
+return !(
+
+r1.right < r2.left ||
+r1.left > r2.right ||
+r1.bottom < r2.top ||
+r1.top > r2.bottom
+
+);
+
+}
+
+function checkEnemyCollisions(){
+
+const playerRect =
+player.getBoundingClientRect();
+
+for(let enemy of enemies){
+
+if(enemy.defeated)
+continue;
+
+const enemyRect =
+enemy.element.getBoundingClientRect();
+
+if(rectsCollide(
+playerRect,
+enemyRect
+)){
+
+battleEnemy = enemy;
+
+startBattle(enemy);
+
+break;
+
+}
+
+}
+
+}
+
+/* =========================================
+   BUCLE PRINCIPAL
+========================================= */
+
+function gameLoop(){
+
+updatePlayer();
+
+updateTouchMovement();
+
+updateCamera();
+
+checkEnemyCollisions();
+
+requestAnimationFrame(
+gameLoop
+);
+
+}
+
+requestAnimationFrame(
+gameLoop
+);
+
+setInterval(
+saveGame,
+5000
+);
+
+window.addEventListener(
+"beforeunload",
+saveGame
+);/* =========================================
+   SISTEMA DE COMBATE
+========================================= */
+
+let currentQuestionIndex = 0;
+let mistakesAgainstEnemy = 0;
+
+const battleScreen =
+document.getElementById("battleScreen");
+
+const questionBox =
+document.getElementById("question");
+
+const answer1 =
+document.getElementById("a1");
+
+const answer2 =
+document.getElementById("a2");
+
+const answer3 =
+document.getElementById("a3");
+
+function startBattle(enemy){
+
+battleScreen.style.display = "flex";
+
+currentQuestionIndex = 0;
+mistakesAgainstEnemy = 0;
+
+showQuestion();
+
+}
+
+/* =========================================
+   MOSTRAR PREGUNTA
+========================================= */
+
+function showQuestion(){
+
+const q =
+battleEnemy.data.questions[
+currentQuestionIndex
+];
+
+questionBox.innerHTML =
+`
+<h2>${battleEnemy.data.name}</h2>
+<br>
+${q.q}
+`;
+
+answer1.innerText =
+"A) " + q.a;
+
+answer2.innerText =
+"B) " + q.b;
+
+answer3.innerText =
+"C) " + q.c;
+
+answer1.onclick =
+()=>answerQuestion("a");
+
+answer2.onclick =
+()=>answerQuestion("b");
+
+answer3.onclick =
+()=>answerQuestion("c");
+
+}
+
+/* =========================================
+   RESPONDER PREGUNTA
+========================================= */
+
+function answerQuestion(choice){
+
+const q =
+battleEnemy.data.questions[
+currentQuestionIndex
+];
+
+if(choice === q.correct){
+
+currentQuestionIndex++;
+
+if(
+currentQuestionIndex >=
+battleEnemy.data.questions.length
+){
+
+victoryBattle();
+
+}else{
+
+showQuestion();
+
+}
+
+}else{
+
+wrongAnswer();
+
+}
+
+}
+
+/* =========================================
+   RESPUESTA INCORRECTA
+========================================= */
+
+function wrongAnswer(){
+
+lives--;
+
+mistakesAgainstEnemy++;
+
+updateHUD();
+
+document.getElementById(
+"messageBox"
+).innerText =
+"Respuesta incorrecta. Pierdes una vida.";
+
+if(lives <= 0){
+
+fullRestart(
+"Te has quedado sin vidas."
+);
+
+return;
+
+}
+
+if(
+battleEnemy.data.boss &&
+mistakesAgainstEnemy >= 3
+){
+
+fullRestart(
+"Morgana te derrotó."
+);
+
+return;
+
+}
+
+if(
+!battleEnemy.data.boss &&
+mistakesAgainstEnemy >= 2
+){
+
+fullRestart(
+"El enemigo te derrotó."
+);
+
+return;
+
+}
+
+}
+
+/* =========================================
+   VICTORIA
+========================================= */
+
+function victoryBattle(){
+
+battleScreen.style.display =
+"none";
+
+battleEnemy.defeated = true;
+
+battleEnemy.element.remove();
+
+document.getElementById(
+"messageBox"
+).innerText =
+"Has derrotado a " +
+battleEnemy.data.name;
+
+if(
+battleEnemy.data.fragment
+){
+
+fragments++;
+
+document.getElementById(
+"messageBox"
+).innerText +=
+" y obtuviste un fragmento de corona.";
+
+}
+
+/* =========================================
+   JEFE FINAL
+========================================= */
+
+if(
+battleEnemy.data.boss
+){
+
+setTimeout(()=>{
+
+showEnding();
+
+},2000);
+
+return;
+
+}
+
+/* =========================================
+   DESBLOQUEAR CASTILLO
+========================================= */
+
+if(
+currentLevel === 5 &&
+fragments < 4
+){
+
+document.getElementById(
+"messageBox"
+).innerText =
+"Necesitas los 4 fragmentos de corona.";
+
+updateHUD();
+
+return;
+
+}
+
+/* =========================================
+   SIGUIENTE NIVEL
+========================================= */
+
+setTimeout(()=>{
+
+advanceLevel();
+
+},1500);
+
+updateHUD();
+
+saveGame();
+
+}
+
+/* =========================================
+   AVANZAR NIVEL
+========================================= */
+
+function advanceLevel(){
+
+currentLevel++;
+
+if(
+currentLevel >= levels.length
+){
+
+currentLevel =
+levels.length - 1;
+
+}
+
+playerX = 200;
+playerY = 200;
+
+buildWorld();
+
+updateHUD();
+
+saveGame();
+
+}
+
+/* =========================================
+   REINICIO COMPLETO
+========================================= */
+
+function fullRestart(reason){
+
+battleScreen.style.display =
+"none";
+
+alert(reason);
+
+localStorage.removeItem(
+"coronaMalditaSave"
+);
+
+lives = 4;
+fragments = 0;
+currentLevel = 0;
+
+playerX = 200;
+playerY = 200;
+
+buildWorld();
+
+updateHUD();
+
+saveGame();
+
+}
+
+/* =========================================
+   MENSAJES DE HISTORIA
+========================================= */
+
+function storyMessage(text){
+
+document.getElementById(
+"messageBox"
+).innerText = text;
+
+}
+
+function introStory(){
+
+storyMessage(
+"El rey ha encomendado a Sir Aurelius rescatar a la princesa Elena."
+);
+
+setTimeout(()=>{
+
+storyMessage(
+"Recupera los fragmentos de la corona y derrota a Morgana."
+);
+
+},4000);
+
+}
+
+setTimeout(
+introStory,
+1000
+);/* =========================================
+   CINEMÁTICA FINAL
+   PRINCESA ELENA
+   RESTAURACIÓN DEL REINO
+========================================= */
+
+function showEnding(){
+
+const finalScreen =
+document.getElementById(
+"finalScreen"
+);
+
+finalScreen.style.display =
+"flex";
+
+finalScreen.innerHTML = `
+<h1>👑 La Corona Real ha sido restaurada</h1>
+
+<br>
+
+<h2>✨ La magia oscura desaparece ✨</h2>
+
+<br>
+
+<div id="endingScene"
+style="
+font-size:90px;
+margin-top:20px;
+">
+🧙‍♀️ ➜ 💨
+</div>
+
+<br>
+
+<div style="
+font-size:100px;
+margin-top:10px;
+">
+🤴 ⚔️ 👸
+</div>
+
+<br>
+
+<p style="
+max-width:900px;
+font-size:24px;
+line-height:1.6;
+">
+Sir Aurelius ha derrotado a Morgana.
+La Corona Real vuelve a brillar
+y la princesa Elena recupera su libertad.
+</p>
+
+<br>
+
+<h2>
+🎆 El Reino de Eldoria celebra 🎆
+</h2>
+
+<div id="fireworksContainer"></div>
+
+<br>
+
+<button
+class="menuBtn"
+onclick="showCredits()">
+Ver Créditos
+</button>
